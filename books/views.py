@@ -10,7 +10,6 @@ from books.serializers import BookSerializer
 class BookViewSet(viewsets.ModelViewSet):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-    authentication_classes = (TokenAuthentication,)
 
     def get_permissions(self):
         if self.action == 'list':
