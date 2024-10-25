@@ -8,7 +8,6 @@ from borrowing.serializers import BorrowingListSerializer, BorrowingRetrieveSeri
 
 class BorrowingViewSet(viewsets.ModelViewSet):
     queryset = Borrowing.objects.all()
-    permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
         if self.action == "retrieve":
