@@ -17,9 +17,15 @@ class BorrowingListSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        validated_data["user"] = self.context["request"].user
-        return super().create(validated_data)
+        book = validated_data['book']
+        book.inventory -= 1
+        book.save()
 
+        borrowing = Borrowing.objects.create(
+            **validated_data,
+            user=self.context['request'].user
+        )
+        return borrowing
 
 
 class BorrowingRetrieveSerializer(serializers.ModelSerializer):
