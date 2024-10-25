@@ -19,3 +19,9 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         if self.request.user.is_staff:
             return Borrowing.objects.all()
         return Borrowing.objects.filter(user=self.request.user)
+
+    def get_permissions(self):
+        if self.action == 'list':
+            self.permission_classes = [IsAuthenticated]
+        return super().get_permissions()
+
