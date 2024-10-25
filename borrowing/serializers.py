@@ -15,5 +15,10 @@ class BorrowingSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
-class BorrowingRetrieveSerializer(BorrowingSerializer):
+
+class BorrowingRetrieveSerializer(serializers.ModelSerializer):
     book = BookSerializer(read_only=True)
+
+    class Meta:
+        model = Borrowing
+        fields = "id", "borrow_date", "expected_date_returned", "actual_date_returned", "book", "user"
