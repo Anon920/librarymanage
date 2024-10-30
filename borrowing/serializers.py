@@ -49,3 +49,6 @@ class BorrowingRetrieveSerializer(BorrowingListAdminSerializer):
     class Meta:
         model = Borrowing
         fields = "id", "borrow_date", "expected_date_returned", "actual_date_returned", "book", "user"
+        fields = "id", "borrow_date", "expected_return_date", "actual_return_date", "book", "user"
+
+
