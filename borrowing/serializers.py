@@ -9,8 +9,7 @@ class BorrowingListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Borrowing
-        fields = "id", "borrow_date", "expected_date_returned", "actual_date_returned", "book", "user"
-        read_only_fields = ("borrow_date", "actual_date_returned", "user")
+        fields = "id", "borrow_date", "expected_return_date", "actual_return_date", "book"
 
     def validate(self, data):
         book = data["book"]
