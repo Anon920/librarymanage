@@ -1,18 +1,34 @@
-from rest_framework import viewsets
+from datetime import date
+
+from django.db import transaction
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
+from rest_framework.response import Response
 
 from borrowing.models import Borrowing
 
-from borrowing.serializers import BorrowingListSerializer, BorrowingRetrieveSerializer
+from borrowing.serializers import BorrowingListSerializer, BorrowingRetrieveSerializer, BorrowingSerializer, \
+    BorrowingListAdminSerializer, BorrowingListRetrieveSerializer
 
 
 class BorrowingViewSet(viewsets.ModelViewSet):
     queryset = Borrowing.objects.all()
+    serializer_class = BorrowingSerializer
 
     def get_serializer_class(self):
+        serializer = super().get_serializer_class()
+        if self.action == "list":
+            if not self.request.user.is_staff:
+                return BorrowingListSerializer
+            serializer = BorrowingListAdminSerializer
         if self.action == "retrieve":
-            return BorrowingRetrieveSerializer
-        return BorrowingListSerializer
+            serializer = BorrowingRetrieveSerializer
+        if self.action == "return_borrowings":
+            return BorrowingListRetrieveSerializer
+        return serializer
 
     def get_queryset(self):
         if self.request.user.is_staff:
