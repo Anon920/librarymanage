@@ -24,3 +24,37 @@ class BorrowingViewSet(viewsets.ModelViewSet):
             self.permission_classes = [IsAuthenticated]
         return super().get_permissions()
 
+    @action(
+        methods=["POST"],
+        detail=True,
+        url_path="return-borrowings",
+        url_name="return-borrowings",
+        permission_classes=[IsAuthenticated],
+    )
+    def return_borrowing(self, request: Request, pk: int = None):
+        """Endpoint for returning borrowing"""
+        borrowing = get_object_or_404(Borrowing, pk=pk)
+
+        if borrowing.actual_return_date:
+            return Response(
+                {"detail": "This borrowing has already been returned."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if borrowing.user_id != self.request.user.id:
+            return Response(
+                {"detail": "This is not your borrowing."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        with transaction.atomic():
+            borrowing.book.inventory += 1
+            borrowing.book.save()
+
+            if request.user.is_staff:
+                borrowing.actual_return_date = request.data.get('actual_return_date', date.today())
+            else:
+                borrowing.actual_return_date = date.today()
+            borrowing.save()
+
+        return Response({"detail": "The book is returned."}, status=status.HTTP_200_OK)
