@@ -5,6 +5,8 @@ from borrowing.models import Borrowing
 
 
 class BorrowingListSerializer(serializers.ModelSerializer):
+    book = serializers.CharField(source="book.title", read_only=True)
+
     class Meta:
         model = Borrowing
         fields = "id", "borrow_date", "expected_date_returned", "actual_date_returned", "book", "user"
