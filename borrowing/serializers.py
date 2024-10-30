@@ -11,6 +11,20 @@ class BorrowingListSerializer(serializers.ModelSerializer):
         model = Borrowing
         fields = "id", "borrow_date", "expected_return_date", "actual_return_date", "book"
 
+
+class BorrowingListAdminSerializer(BorrowingListSerializer):
+    user_id = serializers.CharField(source="user.id", read_only=True)
+
+    class Meta:
+        model = Borrowing
+        fields = BorrowingListSerializer.Meta.fields + ("user_id",)
+
+
+class BorrowingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Borrowing
+        fields = ("id", "book", "expected_return_date", "actual_return_date")
+
     def validate(self, data):
         book = data["book"]
         if book.inventory <= 0:
