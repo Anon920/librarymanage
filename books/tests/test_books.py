@@ -1,0 +1,82 @@
+from decimal import Decimal
+
+from django.test import TestCase, Client
+from django.urls import reverse
+from django.contrib.auth.models import User
+from rest_framework import status
+from rest_framework.test import APIClient
+from books.serializers import BookSerializer
+
+from books.models import Book
+
+BOOK_URL = reverse("library:book-list")
+
+
+def sample_book(**additional) -> Book:
+    defaults = {
+        "title": "Book title",
+        "author": "Author Sample",
+        "cover": "SOFT",
+        "inventory": 10,
+        "daily_fee": Decimal("1.04")
+    }
+    defaults.update(additional)
+
+    return Book.objects.create(**defaults)
+
+
+class UnAuthenticatedBookAPITests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_list_books(self) -> None:
+        sample_book()
+        sample_book(title="Test2", cover="HARD")
+        sample_book(title="Test3", inventory=11)
+
+        response = self.client.get(BOOK_URL)
+
+        books = Book.objects.all()
+        serializer = BookSerializer(books, many=True)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, serializer.data)
+
+    def test_retrieve_book(self) -> None:
+        book = sample_book()
+
+        url = reverse("library:book-detail", kwargs={"pk": book.id})
+        response = self.client.get(url)
+
+        serializer = BookSerializer(book)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, serializer.data)
+
+    def test_create_book_unauthenticated(self) -> None:
+        payload = {
+            "title": "New Book",
+            "author": "New Author",
+            "cover": "SOFT",
+            "inventory": 10,
+            "daily_fee": Decimal("2.04")
+        }
+
+        response = self.client.post(BOOK_URL, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_update_book_unauthenticated(self) -> None:
+        book = sample_book()
+        payload = {
+            "title": "Updated Book",
+            "author": "Updated Author",
+            "cover": "HARD",
+            "inventory": 15,
+            "daily_fee": Decimal("3.04")
+        }
+
+        url = reverse("library:book-detail", kwargs={"pk": book.id})
+        response = self.client.put(url, payload, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
