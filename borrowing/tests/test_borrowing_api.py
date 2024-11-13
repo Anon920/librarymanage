@@ -163,3 +163,32 @@ class AuthenticatedBorrowingTests(TestCase):
         response = self.client.post(BORROWINGS_URL, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('This book is out of stock.', response.json()['book'])
+
+
+class AdminBorrowingTests(TestCase):
+    @patch("httpx.AsyncClient.post", new_callable=AsyncMock)
+    def setUp(self, mocked_notify):
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_superuser(
+            email="admin@test.com", password="password"
+        )
+        self.user_2 = sample_user(email="test1@test1.com", password="password")
+        self.book = sample_book()
+
+        sample_borrowing(user=self.user, book=self.book)
+        sample_borrowing(user=self.user_2, book=self.book)
+
+        self.client.force_authenticate(self.user)
+
+    @patch("httpx.AsyncClient.post", new_callable=AsyncMock)
+    def test_list_borrowings(self, mocked_notify):
+        response = self.client.get(BORROWINGS_URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
+    @patch("httpx.AsyncClient.post", new_callable=AsyncMock)
+    def test_borrowing_detail(self, mocked_notify):
+        borrowing = sample_borrowing(user=self.user_2, book=self.book)
+        response = self.client.get(get_detail(borrowing.id))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], borrowing.id)
