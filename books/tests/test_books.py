@@ -86,7 +86,7 @@ class UnAuthenticatedBookAPITests(TestCase):
 class AuthenticatedBookAPITests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create(
-            username='testuser',
+            email="user@test.com",
             password='testpassword'
         )
         self.client = APIClient()
