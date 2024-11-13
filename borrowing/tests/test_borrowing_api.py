@@ -192,3 +192,35 @@ class AdminBorrowingTests(TestCase):
         response = self.client.get(get_detail(borrowing.id))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["id"], borrowing.id)
+
+
+class ReturnBorrowingTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_superuser(
+            email="admin@test.com", password="password"
+        )
+        self.user_2 = sample_user(email="test1@test1.com", password="password")
+        self.book = sample_book()
+        self.borrowing = sample_borrowing(user=self.user, book=self.book)
+        self.borrowing_user_2 = sample_borrowing(user=self.user_2, book=self.book)
+        self.client.force_authenticate(self.user_2)
+
+    def test_return_borrowing(self):
+        book_inventory = self.book.inventory
+        response = self.client.post(get_return_url(self.borrowing_user_2.id))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('The book is returned.', response.json()['detail'])
+
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.inventory, book_inventory + 1)
+
+    def test_return_borrowing_forbidden(self):
+        response = self.client.post(get_return_url(self.borrowing.id))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_already_returned_borrowing(self):
+        self.client.post(get_return_url(self.borrowing_user_2.id))
+        response = self.client.post(get_return_url(self.borrowing_user_2.id))
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
