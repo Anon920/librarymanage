@@ -36,7 +36,7 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         return Borrowing.objects.filter(user=self.request.user)
 
     def get_permissions(self):
-        if self.action == 'list':
+        if self.action == 'list' or self.action == 'create':
             self.permission_classes = [IsAuthenticated]
         return super().get_permissions()
 
